@@ -9,49 +9,52 @@ export async function GET(req: Request) {
   const page = parseInt(searchParams.get("page") || "1", 10);
   const show = parseInt(searchParams.get("show") || "6", 10);
   try {
+    let translatedQuery = query;
     // Step 1: Translate
-    const translationRes = await fetch(
-      `https://655.mtis.workers.dev/translate?text=${encodeURIComponent(
-        query
-      )}&source_lang=${sourceLang}&target_lang=en`
-    );
+    if (sourceLang != "en") {
+      const translationRes = await fetch(
+        `https://655.mtis.workers.dev/translate?text=${encodeURIComponent(
+          query
+        )}&source_lang=${sourceLang}&target_lang=en`
+      );
 
-    if (!translationRes.ok) {
-      console.error(
-        "Translation API Error:",
-        translationRes.status,
-        translationRes.statusText
-      );
-      return NextResponse.json(
-        { error: "Translation API failed" },
-        { status: 500 }
-      );
+      if (!translationRes.ok) {
+        console.error(
+          "Translation API Error:",
+          translationRes.status,
+          translationRes.statusText
+        );
+        return NextResponse.json(
+          { error: "Translation API failed" },
+          { status: 500 }
+        );
+      }
+
+      const translationData = await translationRes.json();
+
+      if (
+        !translationData ||
+        !translationData.response ||
+        !translationData.response.translated_text
+      ) {
+        console.error("Invalid Translation Response:", translationData);
+        return NextResponse.json(
+          { error: "Invalid translation response" },
+          { status: 500 }
+        );
+      }
+
+      translatedQuery = translationData.response.translated_text;
     }
-
-    const translationData = await translationRes.json();
-
-    if (
-      !translationData ||
-      !translationData.response ||
-      !translationData.response.translated_text
-    ) {
-      console.error("Invalid Translation Response:", translationData);
-      return NextResponse.json(
-        { error: "Invalid translation response" },
-        { status: 500 }
-      );
-    }
-
-    const translatedQuery = translationData.response.translated_text;
     console.log("Translated Query:", translatedQuery);
 
     // Step 2: Search Elasticsearch
     const result = await client.search({
       index: "ted",
       body: {
-        _source: ["title", "speaker_1", "event", "url"],
+        _source: ["title", "speaker_1", "event", "url", "recorded_date"],
         size: show,
-        from: page > 1 ? (page - 1) * show : 0,
+        from: (page - 1) * show,
         query: {
           multi_match: {
             query: translatedQuery,

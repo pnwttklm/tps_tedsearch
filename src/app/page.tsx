@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
 
 interface TEDTalk {
@@ -7,6 +8,7 @@ interface TEDTalk {
   speaker_1: string;
   event: string;
   url: string;
+  recorded_date: string;
 }
 
 interface ElasticsearchHit {
@@ -40,6 +42,14 @@ export default function SearchPage() {
       console.error("Search Error:", error);
     }
   };
+  const formatDate = (dateString: string) => {
+    const dateObj = new Date(dateString);
+    return dateObj.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   // Trigger a search when `show` changes and reset to page 1
   useEffect(() => {
@@ -49,7 +59,7 @@ export default function SearchPage() {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold">TED Talks Search</h1>
+      <Image src='/logo.svg' alt="TEDx" width={300} height={300} />
       <div className="mt-4">
         <input
           type="text"
@@ -119,16 +129,40 @@ export default function SearchPage() {
 
       {translatedQuery && (
         <p className="mt-4 text-gray-600">
-          Translated Query: <strong>{translatedQuery}</strong>
+          Showing the results of <strong>{translatedQuery}</strong>
         </p>
       )}
 
-      <ul className="mt-6">
+      <div className="mt-6 w-full grid grid-cols-3 grid-flow-row sm:overflow-auto">
         {results.map((result, index) => (
-          <li key={index} className="mb-4">
-            <h2 className="font-semibold text-lg">{result._source.title}</h2>
-            <p>Speaker: {result._source.speaker_1}</p>
-            <p>Event: {result._source.event}</p>
+          <div key={index} className="mb-4 w-6/12">
+            <iframe
+              src={result._source.url.replace("https://www.", "https://embed.")}
+              className="w-full"
+            ></iframe>
+            <div>
+              <div className="flex flex-row justify-between">
+                <div>
+                  <h2 className="font-semibold text-lg">
+                    {result._source.title}
+                  </h2>
+                </div>
+                <div>
+                  <p className="text-white bg-red-600 w-fit px-1">
+                    {result._source.event}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-row justify-between">
+                <div>
+                  <p>{result._source.speaker_1}</p>
+                </div>
+                <div>
+                  <p>{formatDate(result._source.recorded_date)}</p>
+                </div>
+              </div>
+            </div>
+
             <a
               href={result._source.url}
               target="_blank"
@@ -137,9 +171,9 @@ export default function SearchPage() {
             >
               Watch Here
             </a>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
