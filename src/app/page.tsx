@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from "react";
 
 interface TEDTalk {
   title: string;
@@ -14,18 +14,22 @@ interface ElasticsearchHit {
 }
 
 export default function SearchPage() {
-  const [query, setQuery] = useState('');
-  const [sourceLang, setSourceLang] = useState('auto'); // Default to 'auto' for autodetection
-  const [translatedQuery, setTranslatedQuery] = useState('');
+  const [query, setQuery] = useState("");
+  const [sourceLang, setSourceLang] = useState("en");
+  const [translatedQuery, setTranslatedQuery] = useState("");
   const [results, setResults] = useState<ElasticsearchHit[]>([]);
+  const [page, setPage] = useState(1);
+  const [show, setShow] = useState(6);
 
   const handleSearch = async () => {
     try {
       const res = await fetch(
-        `/api/search?q=${encodeURIComponent(query)}&source_lang=${sourceLang}`
+        `/api/search?q=${encodeURIComponent(
+          query
+        )}&source_lang=${sourceLang}&page=${page}&show=${show}`
       );
       const data = await res.json();
-  
+
       if (data.translatedQuery) {
         setTranslatedQuery(data.translatedQuery);
       }
@@ -33,9 +37,15 @@ export default function SearchPage() {
         setResults(data.results);
       }
     } catch (error) {
-      console.error('Search Error:', error);
+      console.error("Search Error:", error);
     }
   };
+
+  // Trigger a search when `show` changes and reset to page 1
+  useEffect(() => {
+    setPage(1);
+    handleSearch();
+  }, [show]);
 
   return (
     <div className="p-4">
@@ -48,12 +58,12 @@ export default function SearchPage() {
           placeholder="Search in any language..."
           className="border p-2 rounded w-full"
         />
+        <h1>Page: {page}</h1>
         <select
           value={sourceLang}
           onChange={(e) => setSourceLang(e.target.value)}
           className="mt-2 p-2 border rounded"
         >
-          <option value="auto">Auto-detect</option>
           <option value="th">Thai</option>
           <option value="en">English</option>
           <option value="es">Spanish</option>
@@ -61,8 +71,46 @@ export default function SearchPage() {
           <option value="zh">Chinese</option>
           {/* Add more languages as needed */}
         </select>
+
         <button
-          onClick={handleSearch}
+          onClick={() => {
+            if (page > 1) {
+              setPage(page - 1);
+              handleSearch();
+            }
+          }}
+          className="mt-2 bg-blue-500 text-white px-4 py-2 rounded"
+          disabled={page === 1}
+        >
+          Previous
+        </button>
+        <button
+          onClick={() => {
+            setPage(page + 1);
+            handleSearch();
+          }}
+          className="mt-2 bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Next
+        </button>
+
+        <select
+          value={show}
+          onChange={(e) => setShow(Number(e.target.value))}
+          className="mt-2 p-2 border rounded"
+        >
+          <option value={6}>6</option>
+          <option value={12}>12</option>
+          <option value={24}>24</option>
+          <option value={48}>48</option>
+          <option value={96}>96</option>
+        </select>
+
+        <button
+          onClick={() => {
+            setPage(1); // Reset to page 1 on new search
+            handleSearch();
+          }}
           className="mt-2 bg-blue-500 text-white px-4 py-2 rounded"
         >
           Search
