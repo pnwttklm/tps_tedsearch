@@ -73,6 +73,7 @@ export default function SearchPage() {
             <option value="es">🇪🇸 Spanish</option>
             <option value="fr">🇫🇷 French</option>
             <option value="zh">🇨🇳 Chinese</option>
+            <option value="de">🇩🇪 German</option>
           </select>
           <input
             type="text"
