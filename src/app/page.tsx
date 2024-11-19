@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { BsArrowUpRight, BsChevronLeft, BsChevronRight } from "react-icons/bs";
+import {
+  BsArrowUp,
+  BsArrowUpRight,
+  BsChevronLeft,
+  BsChevronRight,
+  BsSearch,
+} from "react-icons/bs";
 
 interface TEDTalk {
   title: string;
@@ -105,6 +111,25 @@ export default function SearchPage() {
         </div>
       </div>
 
+      {!translatedQuery && (
+        <div className="flex flex-col items-center mt-32">
+          <div className="space-y-12">
+            <BsArrowUp className="text-9xl text-[#BBBBBB]" />
+            <div className="space-y-6">
+              <h1 className="font-bold text-6xl text-[#BBBBBB]">
+                Waiting for your search
+              </h1>
+              <h1 className="text-2xl text-[#BBBBBB]">
+                Try search something in the search box
+              </h1>
+            </div>
+            <div className="flex flex-col items-end">
+              <BsSearch className="text-9xl text-[#BBBBBB] -mt-24" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {translatedQuery && (
         <p className="mt-4 text-gray-600">
           Showing the results of <strong>{translatedQuery}</strong>
@@ -121,9 +146,7 @@ export default function SearchPage() {
             <div className="space-y-3">
               <div className="flex flex-row justify-between">
                 <div>
-                  <h1 className="font-bold text-xl">
-                    {result._source.title}
-                  </h1>
+                  <h1 className="font-bold text-xl">{result._source.title}</h1>
                 </div>
                 <div>
                   <p className="text-white bg-red-600 w-fit px-1">
