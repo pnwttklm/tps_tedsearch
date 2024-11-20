@@ -59,7 +59,7 @@ export async function GET(req: Request) {
           multi_match: {
             query: translatedQuery,
             fields: [
-              "title^1.5",
+              "title^2",
               "speaker_1^1.2",
               "topics",
               "all_speakers",
@@ -67,7 +67,7 @@ export async function GET(req: Request) {
               "about_speakers^1.2",
               "event",
               "description",
-              "transcript^1.2",
+              "transcript",
             ],
             slop: 2,
             fuzziness: "auto",
